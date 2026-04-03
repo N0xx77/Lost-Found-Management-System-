@@ -1,3 +1,5 @@
+package model;
+
 public abstract class Item {
     private String item_name;
     private String material;

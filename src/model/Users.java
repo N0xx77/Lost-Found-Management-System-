@@ -1,3 +1,5 @@
+package model;
+
 public class Users {
     private String fname;
     private String lname;

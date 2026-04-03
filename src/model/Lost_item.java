@@ -1,3 +1,5 @@
+package model;
+
 public class Lost_item extends Item{
     private String lost_location;
     private java.sql.Date lost_date;
