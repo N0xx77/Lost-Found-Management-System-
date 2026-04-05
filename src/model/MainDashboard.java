@@ -211,7 +211,7 @@ public class MainDashboard extends JFrame {
                 long matchId = (long) table.getValueAt(selectedRow, 0);
                 dbHandler.confirmMatch(matchId);
                 JOptionPane.showMessageDialog(this, "Confirmation sent! The item status is now 'Returned'.");
-                refreshTable(model); // Refresh to remove the confirmed match
+                refreshTable(model); 
             } else {
                 JOptionPane.showMessageDialog(this, "Please select a match from the table first.");
             }
