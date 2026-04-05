@@ -7,9 +7,9 @@ import model.Users;
 // import model.Item;
 
 public class DataBaseHandler{
-    private HashMap<Integer, String> objectMap = new HashMap<>();
-    private HashMap<Integer, String> colourMap = new HashMap<>();
-    private HashMap<Integer, String> categoryMap = new HashMap<>();
+    private final HashMap<Integer, String> objectMap = new HashMap<>();
+    private final HashMap<Integer, String> colourMap = new HashMap<>();
+    private final HashMap<Integer, String> categoryMap = new HashMap<>();
 
     public DataBaseHandler() {
         loadMapData();
@@ -20,15 +20,15 @@ public class DataBaseHandler{
     public int getObjectId(String name) { return objectMap.entrySet().stream().filter(e -> e.getValue().equals(name)).map(e -> e.getKey()).findFirst().orElse(1); }
 
     public String[] getCategoryNames() {
-        return categoryMap.values().toArray(new String[0]);
+        return categoryMap.values().toArray(String[]::new);
     }
 
     public String[] getColorNames() {
-        return colourMap.values().toArray(new String[0]);
+        return colourMap.values().toArray(String[]::new);
     }
 
     public String[] getObjectNames() {
-        return objectMap.values().toArray(new String[0]);
+        return objectMap.values().toArray(String[]::new);
     }
 
     // Helper methods to get ID from Name (needed for the Lost_item constructor)
@@ -68,7 +68,7 @@ public class DataBaseHandler{
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Database Error while loading map data: " + e.getMessage());
         }
     }
     
@@ -151,7 +151,7 @@ public class DataBaseHandler{
             String firstName = stmt.getString(4);
 
             if (firstName != null && !firstName.trim().isEmpty()) {
-                System.out.println("✅ Login Successful! Welcome " + firstName);
+                System.out.println("Login Successful! Welcome " + firstName);
                 
                 return new Users(firstName, "", userId); 
                 
@@ -192,7 +192,7 @@ public class DataBaseHandler{
             pstmt.setLong(1, userId);
             return pstmt.executeQuery();
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println("Database Error while fetching finder matches: " + e.getMessage());
             return null;
         }
     }
@@ -203,9 +203,9 @@ public class DataBaseHandler{
             CallableStatement stmt = con.prepareCall(sql)) {
             stmt.setLong(1, matchId);
             stmt.execute();
-            System.out.println("✅ Match confirmed and items marked as returned!");
+            System.out.println("Match confirmed and items marked as returned!");
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println("Database Error while confirming match: " + e.getMessage());
         }
     }
     public ResultSet getGlobalFeed() {
@@ -222,7 +222,7 @@ public class DataBaseHandler{
             Statement stmt = con.createStatement();
             return stmt.executeQuery(sql);
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println("Database Error while loading global feed: " + e.getMessage());
             return null;
         }
     }

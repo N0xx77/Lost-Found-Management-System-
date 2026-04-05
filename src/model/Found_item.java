@@ -2,10 +2,10 @@ package model;
 
 public class Found_item extends Item {
 
-    private String found_location;
-    private java.sql.Date found_date;
-    private long user_id;
-    private long item_id;
+    private final String found_location;
+    private final java.sql.Date found_date;
+    private final long user_id;
+    private final long item_id;
 
     public Found_item(String iname, String mat, String shape, String brand, String descrip, String status, int objID, int colID, int catID, String found_location, java.sql.Date found_date, long user_id, long item_id) {
         super(iname, mat, shape, brand, descrip, status, objID, colID, catID);

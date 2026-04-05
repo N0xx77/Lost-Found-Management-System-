@@ -1,9 +1,9 @@
 package model;
 
 public class Users {
-    private String fname;
-    private String lname;
-    private long userID;
+    private final String fname;
+    private final String lname;
+    private final long userID;
 
     public Users(String fname, String lname, long ID){
         this.fname = fname;

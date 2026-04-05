@@ -1,15 +1,15 @@
 package model;
 
 public abstract class Item {
-    private String item_name;
-    private String material;
-    private String shape;
-    private String brand;
-    private String descriptions;
-    private String status;
-    private int objectID;
-    private int colourID;
-    private int categoryID;
+    private final String item_name;
+    private final String material;
+    private final String shape;
+    private final String brand;
+    private final String descriptions;
+    private final String status;
+    private final int objectID;
+    private final int colourID;
+    private final int categoryID;
 
     protected Item(String iname, String mat, String shape, String brand, String descrip, String status, int objID, int colID, int catID){
         this.item_name = iname;

@@ -1,15 +1,15 @@
-package model;
+package ui;
 
-import javax.swing.*;
 import database_access_only.DataBaseHandler;
 import java.awt.*;
-import java.awt.event.*;
+import javax.swing.*;
+import model.Users;
 
 public class LoginFrame extends JFrame {
-    private JTextField emailField;
-    private JPasswordField passField;
-    private JButton loginBtn;
-    private DataBaseHandler dbHandler;
+    private final JTextField emailField;
+    private final JPasswordField passField;
+    private final JButton loginBtn;
+    private final DataBaseHandler dbHandler;
 
     public LoginFrame() {
         dbHandler = new DataBaseHandler();
@@ -53,7 +53,8 @@ public class LoginFrame extends JFrame {
         if (loggedInUser != null) {
             JOptionPane.showMessageDialog(this, "Login Successful! Welcome, " + loggedInUser.getName());
             
-            new MainDashboard(loggedInUser);
+            MainDashboard dashboard = new MainDashboard(loggedInUser);
+            dashboard.setVisible(true);
             
             this.dispose(); 
         } else {

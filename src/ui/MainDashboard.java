@@ -1,15 +1,18 @@
-package model;
+package ui;
 
-import javax.swing.*;
 import database_access_only.DataBaseHandler;
 import java.awt.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import model.Found_item;
+import model.Lost_item;
+import model.Users;
 
 public class MainDashboard extends JFrame {
-    private Users currentUser;
-    private DataBaseHandler dbHandler;
+    private final Users currentUser;
+    private final DataBaseHandler dbHandler;
 
     public MainDashboard(Users user) {
         this.currentUser = user;
@@ -238,7 +241,7 @@ public class MainDashboard extends JFrame {
                 model.addRow(row);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
     }
 
@@ -269,7 +272,7 @@ public class MainDashboard extends JFrame {
                         rs.getString("descriptions")
                     });
                 }
-            } catch (SQLException e) { e.printStackTrace(); }
+            } catch (SQLException e) { System.out.println(e.getMessage()); }
         };
 
         // 3. Toolbar with Refresh

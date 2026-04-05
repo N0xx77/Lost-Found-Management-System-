@@ -8,7 +8,10 @@ public class DBConnection {
     public static Connection getConnection() throws SQLException {
         String url = "jdbc:mysql://localhost:3306/lost_and_found";
         String user = "root";
-        String password = "Hsraka123@";
+        String password = System.getenv("DB_PASSWORD");
+        if(password == null || password.isBlank()){
+            throw new SQLException("DB_PASSWORD is missing! Check your .env in util folder and launch.json envFile.");
+        }
         
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
