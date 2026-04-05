@@ -166,6 +166,17 @@ public class DataBaseHandler{
         }
     }
 
+    public void generateMatches(long found_id) {
+        String sql = "{CALL GenerateMatches(?)}";
+        try (Connection con = DBConnection.getConnection(); CallableStatement stmt = con.prepareCall(sql)){
+            stmt.setLong(1, found_id);
+            stmt.execute();
+            System.out.println("Query Executed");
+        } catch (SQLException e) {
+            System.out.println("Error with matches: "+e);
+        }
+    }
+
     public ResultSet getMatchesForFinder(long userId) {
         String sql = "SELECT m.match_id, i.item_name, m.conf_score, u.fname as owner_name, l.loc_lost " +
                     "FROM matches m " +
