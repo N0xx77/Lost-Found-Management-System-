@@ -16,7 +16,7 @@ public class LoginFrame extends JFrame {
         setTitle("SIT Pune - Lost & Found Login");
         setSize(400, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new GridLayout(3, 2, 10, 10)); // Simple grid layout
+        setLayout(new GridLayout(3, 2, 10, 10)); 
 
         // UI Elements
         add(new JLabel("Email (@sitpune.edu.in):"));
@@ -30,7 +30,6 @@ public class LoginFrame extends JFrame {
         loginBtn = new JButton("Login");
         add(loginBtn);
 
-        // Action Listener (CO4 - Connectivity)
         loginBtn.addActionListener(e -> {
             attemptLogin();
         });
@@ -46,14 +45,11 @@ public class LoginFrame extends JFrame {
             return;
         }
 
-        // Call the database handler using your 'Users' class
         Users loggedInUser = dbHandler.validateLogin(email, pass);
 
         if (loggedInUser != null) {
-            // USING YOUR METHOD: getName()
             JOptionPane.showMessageDialog(this, "Login Successful! Welcome, " + loggedInUser.getName());
             
-            // TODO: Open Main Dashboard here!
             new MainDashboard(loggedInUser);
             
             this.dispose(); 

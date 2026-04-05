@@ -7,7 +7,6 @@ public class Main {
         // This ensures the UI is created on the correct thread (Event Dispatch Thread)
         SwingUtilities.invokeLater(() -> {
             try {
-                // Launch the first screen
                 new LoginFrame();
             } catch (Exception e) {
                 e.printStackTrace();
