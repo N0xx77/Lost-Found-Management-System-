@@ -12,7 +12,7 @@ public class Users {
     }
 
     public String getName(){
-        String name = this.fname + this.lname;
+        String name = this.fname + " " + this.lname;
         return name;
     } 
     

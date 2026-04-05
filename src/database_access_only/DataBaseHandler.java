@@ -3,6 +3,7 @@ import java.sql.*;
 import java.util.HashMap;
 import model.Found_item;
 import model.Lost_item;
+import model.Users;
 
 public class DataBaseHandler{
     private HashMap<Integer, String> objectMap = new HashMap<>();
@@ -93,6 +94,39 @@ public class DataBaseHandler{
 
         } catch (SQLException e) {
             System.out.println("Database Error: "+e);
+        }
+    }
+
+    public Users validateLogin(String email, String password) {
+        String sql = "{CALL sp_ValidateLogin(?, ?, ?, ?)}";
+
+        try (Connection con = DBConnection.getConnection(); 
+            CallableStatement stmt = con.prepareCall(sql)) {
+
+            stmt.setString(1, email);
+            stmt.setString(2, password);
+
+            stmt.registerOutParameter(3, Types.BIGINT);  
+            stmt.registerOutParameter(4, Types.VARCHAR); 
+
+            stmt.execute();
+
+            long userId = stmt.getLong(3);
+            String firstName = stmt.getString(4);
+
+            if (firstName != null && !firstName.trim().isEmpty()) {
+                System.out.println("✅ Login Successful! Welcome " + firstName);
+                
+                return new Users(firstName, "", userId); 
+                
+            } else {
+                System.out.println("Invalid Email or Password.");
+                return null;
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Database Error during login: " + e.getMessage());
+            return null;
         }
     }
 }
