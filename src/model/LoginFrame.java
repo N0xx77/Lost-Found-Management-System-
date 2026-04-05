@@ -32,23 +32,7 @@ public class LoginFrame extends JFrame {
 
         // Action Listener (CO4 - Connectivity)
         loginBtn.addActionListener(e -> {
-            String email = emailField.getText();
-            String pass = new String(passField.getPassword());
-            
-            Users loggedInUser = dbHandler.validateLogin(email, pass);
-
-        if (loggedInUser != null) {
-            // 2. SUCCESS: Close the login window
-            this.dispose(); 
-
-            // 3. SUCCESS: Launch the Dashboard and pass the user object
-            new MainDashboard(loggedInUser); 
-            
-            System.out.println("Transitioning to Dashboard...");
-        } else {
-            // 4. FAILURE: Show alert
-            JOptionPane.showMessageDialog(this, "Invalid Email or Password", "Login Error", JOptionPane.ERROR_MESSAGE);
-        }
+            attemptLogin();
         });
 
         setVisible(true);

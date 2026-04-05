@@ -165,4 +165,54 @@ public class DataBaseHandler{
             return null;
         }
     }
+
+    public ResultSet getMatchesForFinder(long userId) {
+        String sql = "SELECT m.match_id, i.item_name, m.conf_score, u.fname as owner_name, l.loc_lost " +
+                    "FROM matches m " +
+                    "JOIN lost_item l ON m.lost_id = l.lost_id " +
+                    "JOIN found_item f ON m.found_id = f.found_id " +
+                    "JOIN item i ON l.item_id = i.item_id " +
+                    "JOIN users u ON l.user_id = u.user_id " +
+                    "WHERE f.user_id = ? AND i.statuss = 'matched'";
+        
+        try {
+            Connection con = DBConnection.getConnection();
+            PreparedStatement pstmt = con.prepareStatement(sql);
+            pstmt.setLong(1, userId);
+            return pstmt.executeQuery();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public void confirmMatch(long matchId) {
+        String sql = "{CALL ConfirmClaim(?)}";
+        try (Connection con = DBConnection.getConnection();
+            CallableStatement stmt = con.prepareCall(sql)) {
+            stmt.setLong(1, matchId);
+            stmt.execute();
+            System.out.println("✅ Match confirmed and items marked as returned!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    public ResultSet getGlobalFeed() {
+        String sql = "SELECT i.item_name, c.category, col.colour, l.date_lost, l.loc_lost, i.descriptions " +
+                    "FROM item i " +
+                    "JOIN lost_item l ON i.item_id = l.item_id " +
+                    "JOIN category c ON i.category_id = c.category_id " +
+                    "JOIN colour col ON i.colour_id = col.colour_id " +
+                    "WHERE i.statuss = 'active' " +
+                    "ORDER BY l.date_lost DESC";
+        
+        try {
+            Connection con = DBConnection.getConnection();
+            Statement stmt = con.createStatement();
+            return stmt.executeQuery(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

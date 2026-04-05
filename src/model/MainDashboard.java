@@ -3,8 +3,9 @@ package model;
 import javax.swing.*;
 import database_access_only.DataBaseHandler;
 import java.awt.*;
-import java.sql.Date;
-import java.time.LocalDate;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import javax.swing.table.DefaultTableModel;
 
 public class MainDashboard extends JFrame {
     private Users currentUser;
@@ -34,7 +35,7 @@ public class MainDashboard extends JFrame {
         tabs.addTab("Report Lost Item", createLostReportPanel());
         tabs.addTab("Report Found Item", createFoundReportPanel());
         tabs.addTab("Matches & Notifications", createNotificationPanel());
-        tabs.addTab("Global Feed", new JPanel()); // Placeholder for now
+        tabs.addTab("Global Feed", createGlobalFeedPanel()); 
 
         add(tabs, BorderLayout.CENTER);
         setVisible(true);
@@ -192,8 +193,99 @@ public class MainDashboard extends JFrame {
     }
 
     private JPanel createNotificationPanel() {
-        JPanel panel = new JPanel();
-        panel.add(new JLabel("Your Matches will appear here."));
+        JPanel panel = new JPanel(new BorderLayout());
+        
+        // 1. Table Setup
+        String[] columnNames = {"Match ID", "Item Name", "Confidence", "Potential Owner", "Lost Location"};
+        DefaultTableModel model = new DefaultTableModel(columnNames, 0);
+        JTable table = new JTable(model);
+        
+        // 2. Load Data from DB
+        refreshTable(model);
+
+        // 3. Confirm Button
+        JButton confirmBtn = new JButton("Confirm & Return Item");
+        confirmBtn.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow != -1) {
+                long matchId = (long) table.getValueAt(selectedRow, 0);
+                dbHandler.confirmMatch(matchId);
+                JOptionPane.showMessageDialog(this, "Confirmation sent! The item status is now 'Returned'.");
+                refreshTable(model); // Refresh to remove the confirmed match
+            } else {
+                JOptionPane.showMessageDialog(this, "Please select a match from the table first.");
+            }
+        });
+
+        panel.add(new JScrollPane(table), BorderLayout.CENTER);
+        panel.add(confirmBtn, BorderLayout.SOUTH);
+        
+        return panel;
+    }
+
+    private void refreshTable(DefaultTableModel model) {
+        model.setRowCount(0); // Clear existing data
+        try {
+            ResultSet rs = dbHandler.getMatchesForFinder(currentUser.getID());
+            while (rs != null && rs.next()) {
+                Object[] row = {
+                    rs.getLong("match_id"),
+                    rs.getString("item_name"),
+                    rs.getInt("conf_score") + "/10",
+                    rs.getString("owner_name"),
+                    rs.getString("loc_lost")
+                };
+                model.addRow(row);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private JPanel createGlobalFeedPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        
+        // 1. Table Setup
+        String[] columns = {"Item Name", "Category", "Color", "Date Lost", "Location", "Description"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // Make the feed read-only
+            }
+        };
+        JTable table = new JTable(model);
+        
+        // 2. Load Function
+        Runnable loadData = () -> {
+            model.setRowCount(0);
+            try (ResultSet rs = dbHandler.getGlobalFeed()) {
+                while (rs != null && rs.next()) {
+                    model.addRow(new Object[]{
+                        rs.getString("item_name"),
+                        rs.getString("category"),
+                        rs.getString("colour"),
+                        rs.getDate("date_lost"),
+                        rs.getString("loc_lost"),
+                        rs.getString("descriptions")
+                    });
+                }
+            } catch (SQLException e) { e.printStackTrace(); }
+        };
+
+        // 3. Toolbar with Refresh
+        JButton refreshBtn = new JButton("Refresh Feed");
+        refreshBtn.addActionListener(e -> loadData.run());
+        
+        JPanel toolBar = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        toolBar.add(refreshBtn);
+
+        // Initial load
+        loadData.run();
+
+        panel.add(new JLabel(" Recent Lost Items @ SIT Pune", SwingConstants.LEFT), BorderLayout.NORTH);
+        panel.add(new JScrollPane(table), BorderLayout.CENTER);
+        panel.add(toolBar, BorderLayout.SOUTH);
+        
         return panel;
     }
 }
