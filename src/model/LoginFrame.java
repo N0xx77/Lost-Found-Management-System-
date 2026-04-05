@@ -35,9 +35,20 @@ public class LoginFrame extends JFrame {
             String email = emailField.getText();
             String pass = new String(passField.getPassword());
             
-            // Here you'll call your validateLogin method
-            // If success -> Open Dashboard, Else -> Show Error
-            JOptionPane.showMessageDialog(this, "Attempting Login for: " + email);
+            Users loggedInUser = dbHandler.validateLogin(email, pass);
+
+        if (loggedInUser != null) {
+            // 2. SUCCESS: Close the login window
+            this.dispose(); 
+
+            // 3. SUCCESS: Launch the Dashboard and pass the user object
+            new MainDashboard(loggedInUser); 
+            
+            System.out.println("Transitioning to Dashboard...");
+        } else {
+            // 4. FAILURE: Show alert
+            JOptionPane.showMessageDialog(this, "Invalid Email or Password", "Login Error", JOptionPane.ERROR_MESSAGE);
+        }
         });
 
         setVisible(true);

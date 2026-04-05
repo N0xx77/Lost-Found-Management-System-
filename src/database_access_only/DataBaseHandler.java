@@ -4,6 +4,7 @@ import java.util.HashMap;
 import model.Found_item;
 import model.Lost_item;
 import model.Users;
+// import model.Item;
 
 public class DataBaseHandler{
     private HashMap<Integer, String> objectMap = new HashMap<>();
@@ -12,6 +13,41 @@ public class DataBaseHandler{
 
     public DataBaseHandler() {
         loadMapData();
+    }
+
+    public int getCategoryId(String name) { return categoryMap.entrySet().stream().filter(e -> e.getValue().equals(name)).map(e -> e.getKey()).findFirst().orElse(1); }
+    public int getColorId(String name) { return colourMap.entrySet().stream().filter(e -> e.getValue().equals(name)).map(e -> e.getKey()).findFirst().orElse(1); }
+    public int getObjectId(String name) { return objectMap.entrySet().stream().filter(e -> e.getValue().equals(name)).map(e -> e.getKey()).findFirst().orElse(1); }
+
+    public String[] getCategoryNames() {
+        return categoryMap.values().toArray(new String[0]);
+    }
+
+    public String[] getColorNames() {
+        return colourMap.values().toArray(new String[0]);
+    }
+
+    public String[] getObjectNames() {
+        return objectMap.values().toArray(new String[0]);
+    }
+
+    // Helper methods to get ID from Name (needed for the Lost_item constructor)
+    public int getCategoryIdByName(String name) {
+        return categoryMap.entrySet().stream()
+                .filter(entry -> name.equals(entry.getValue()))
+                .map(java.util.Map.Entry::getKey).findFirst().orElse(1);
+    }
+
+    public int getColorIdByName(String name) {
+        return colourMap.entrySet().stream()
+                .filter(entry -> name.equals(entry.getValue()))
+                .map(java.util.Map.Entry::getKey).findFirst().orElse(1);
+    }
+
+    public int getObjectIdByName(String name) {
+        return objectMap.entrySet().stream()
+                .filter(entry -> name.equals(entry.getValue()))
+                .map(java.util.Map.Entry::getKey).findFirst().orElse(1);
     }
 
     private void loadMapData(){
