@@ -4,6 +4,7 @@ import java.util.HashMap;
 import model.Found_item;
 import model.Lost_item;
 import model.Users;
+import service.AppException;
 // import model.Item;
 
 public class DataBaseHandler{
@@ -81,6 +82,14 @@ public class DataBaseHandler{
             String colour = colourMap.get(l.getColourID());
             String category = categoryMap.get(l.getCategoryID());
 
+            System.out.println("[insertLostItem] userId=" + l.getUserId()
+                    + ", itemName=" + l.getItemName()
+                    + ", lostDate=" + l.getLostDate()
+                    + ", lostLocation=" + l.getLostLocation()
+                    + ", objectId=" + l.getObjectID() + " (" + object + ")"
+                    + ", colourId=" + l.getColourID() + " (" + colour + ")"
+                    + ", categoryId=" + l.getCategoryID() + " (" + category + ")");
+
             stmt.setDate(1, l.getLostDate());
             stmt.setString(2, l.getLostLocation());
             stmt.setLong(3, l.getUserId());
@@ -111,6 +120,14 @@ public class DataBaseHandler{
             String object = objectMap.get(f.getObjectID());
             String colour = colourMap.get(f.getColourID());
             String category = categoryMap.get(f.getCategoryID());
+
+            System.out.println("[insertFoundItem] userId=" + f.getUserId()
+                    + ", itemName=" + f.getItemName()
+                    + ", foundDate=" + f.getFoundDate()
+                    + ", foundLocation=" + f.getFoundLocation()
+                    + ", objectId=" + f.getObjectID() + " (" + object + ")"
+                    + ", colourId=" + f.getColourID() + " (" + colour + ")"
+                    + ", categoryId=" + f.getCategoryID() + " (" + category + ")");
 
             stmt.setDate(1, f.getFoundDate());
             stmt.setString(2, f.getFoundLocation());
@@ -208,6 +225,7 @@ public class DataBaseHandler{
             System.out.println("Database Error while confirming match: " + e.getMessage());
         }
     }
+
     public ResultSet getGlobalFeed() {
         String sql = "SELECT i.item_name, c.category, col.colour, l.date_lost, l.loc_lost, i.descriptions " +
                     "FROM item i " +
@@ -225,5 +243,30 @@ public class DataBaseHandler{
             System.out.println("Database Error while loading global feed: " + e.getMessage());
             return null;
         }
+    }
+
+    public void RegisterUser(String fname, String lname, String email, String pass, String number) throws AppException {
+        String sql = "{CALL RegisterUser(?, ?, ?, ?, ?)}";
+
+        try (Connection con = DBConnection.getConnection(); 
+            CallableStatement stmt = con.prepareCall(sql)){
+
+                stmt.setString(1, fname);
+                stmt.setString(2, lname);
+                stmt.setString(3, email);
+                stmt.setString(4, pass);
+                stmt.setString(5, number);
+
+                stmt.execute();
+        }
+        catch(SQLException e){
+            if(e.getErrorCode() == 1062){
+                throw new AppException("This email is already registered!", "DUP_ERR");
+            }
+            else{
+                throw new AppException("Database Error occured: "+e.getMessage(), "DB_ERR");
+            }
+        }
+
     }
 }

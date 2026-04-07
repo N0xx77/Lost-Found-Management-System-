@@ -1,14 +1,11 @@
-
-
 import database_access_only.DBConnection;
 import java.sql.SQLException;
 import javax.swing.SwingUtilities;
-import ui.LoginFrame;
+import ui.StartPage;
 
 public class Main {
     public static void main(String[] args) {
-        // This ensures the UI is created on the correct thread (Event Dispatch Thread)
-        try {
+        try  {
             DBConnection.getConnection();
             System.out.println("Connection established");
         } catch (SQLException e) {
@@ -16,7 +13,8 @@ public class Main {
         }
         SwingUtilities.invokeLater(() -> {
             try {
-                new LoginFrame();
+                StartPage startPage = new StartPage();
+                startPage.setVisible(true);
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }

@@ -14,7 +14,7 @@ public class LoginFrame extends JFrame {
     public LoginFrame() {
         dbHandler = new DataBaseHandler();
         setTitle("SIT Pune - Lost & Found Login");
-        setSize(600, 400);
+        setSize(700, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new GridLayout(3, 2, 10, 10)); 
         ((JComponent) getContentPane()).setBorder(
@@ -22,7 +22,7 @@ public class LoginFrame extends JFrame {
         );
 
         // UI Elements
-        add(new JLabel("Email (@sitpune.edu.in):"));
+        add(new JLabel("Email (firstname.lastname.btech[year]@sitpune.edu.in):"));
         emailField = new JTextField();
         add(emailField);
 
