@@ -1,13 +1,10 @@
 package database_access_only;
 import java.sql.*;
 import java.util.HashMap;
-import model.Found_item;
-import model.Lost_item;
-import model.Users;
-import service.AppException;
-// import model.Item;
+import model.*;
+import service.*;
 
-public class DataBaseHandler{
+public class DataBaseHandler implements ItemOperations{
     private final HashMap<Integer, String> objectMap = new HashMap<>();
     private final HashMap<Integer, String> colourMap = new HashMap<>();
     private final HashMap<Integer, String> categoryMap = new HashMap<>();
@@ -72,7 +69,8 @@ public class DataBaseHandler{
             System.out.println("Database Error while loading map data: " + e.getMessage());
         }
     }
-    
+
+    @Override
     public void insertLostItem(Lost_item l){
         String sql = "{Call ReportLost(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
         
@@ -111,7 +109,7 @@ public class DataBaseHandler{
         }
     }
 
-
+    @Override
     public void insertFoundItem(Found_item f){
         String sql = "{Call ReportLost(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
         
@@ -194,6 +192,7 @@ public class DataBaseHandler{
         }
     }
 
+
     public ResultSet getMatchesForFinder(long userId) {
         String sql = "SELECT m.match_id, i.item_name, m.conf_score, u.fname as owner_name, l.loc_lost " +
                     "FROM matches m " +
@@ -214,6 +213,7 @@ public class DataBaseHandler{
         }
     }
 
+    @Override
     public void confirmMatch(long matchId) {
         String sql = "{CALL ConfirmClaim(?)}";
         try (Connection con = DBConnection.getConnection();
@@ -226,6 +226,7 @@ public class DataBaseHandler{
         }
     }
 
+    @Override
     public ResultSet getGlobalFeed() {
         String sql = "SELECT i.item_name, c.category, col.colour, l.date_lost, l.loc_lost, i.descriptions " +
                     "FROM item i " +
