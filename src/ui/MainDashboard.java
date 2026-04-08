@@ -175,6 +175,7 @@ public class MainDashboard extends JFrame {
 
             dbHandler.insertFoundItem(newItem);
             
+            
             JOptionPane.showMessageDialog(this, "Success! Found item recorded.");
             
             // Optional: Clear fields after success
