@@ -5,8 +5,13 @@
       "type": "java",
       "name": "Main",
       "request": "launch",
-      "mainClass": "root.Main",
-      "projectName": "Lost_Found_e007a4dd"
+      "mainClass": "Main",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/src/.env",
+      "classPaths": [
+        "${workspaceFolder}/bin",
+        "${workspaceFolder}/lib/mysql-connector-j-9.6.0.jar"
+      ]
     },
     {
       "type": "java",
@@ -14,7 +19,7 @@
       "request": "launch",
       "mainClass": "Main",
       "cwd": "${workspaceFolder}",
-      "envFile": "${workspaceFolder}/src/util/.env",
+      "envFile": "${workspaceFolder}/src/.env",
       "classPaths": [
         "${workspaceFolder}/bin",
         "${workspaceFolder}/lib/*"

@@ -1,9 +1,7 @@
 package ui;
 
 import database_access_only.DataBaseHandler;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import java.awt.*;
 import javax.swing.*;
 import service.AppException;
 

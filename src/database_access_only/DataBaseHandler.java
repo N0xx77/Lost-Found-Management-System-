@@ -1,6 +1,7 @@
 package database_access_only;
 import java.sql.*;
 import java.util.HashMap;
+import javax.swing.table.DefaultTableModel;
 import model.*;
 import service.*;
 
@@ -135,7 +136,7 @@ public class DataBaseHandler implements ItemOperations{
 
     @Override
     public void insertFoundItem(Found_item f){
-        String sql = "{Call ReportLost(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+        String sql = "{Call ReportFound(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
         
         try (Connection con = DBConnection.getConnection(); CallableStatement stmt = con.prepareCall(sql)){
             
@@ -189,7 +190,7 @@ public class DataBaseHandler implements ItemOperations{
             long userId = stmt.getLong(3);
             String firstName = stmt.getString(4);
 
-            if (firstName != null && !firstName.trim().isEmpty()) {
+            if (userId > 0 && firstName != null && !firstName.trim().isEmpty()) {
                 System.out.println("Login Successful! Welcome " + firstName);
                 
                 return new Users(firstName, "", userId); 
@@ -205,20 +206,50 @@ public class DataBaseHandler implements ItemOperations{
         }
     }
 
-    public void generateMatches(long found_id) {
+    public boolean matchesExist(long found_id) {
+        String sql = "SELECT COUNT(*) as count FROM matches m " +
+                     "JOIN found_item f ON m.found_id = f.found_id " +
+                     "WHERE f.found_id = ?";
+        try (Connection con = DBConnection.getConnection(); 
+             PreparedStatement stmt = con.prepareStatement(sql)) {
+            stmt.setLong(1, found_id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("count") > 0;
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error checking matches: " + e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean generateMatches(long found_id) {
+        // Check if matches already exist
+        if (matchesExist(found_id)) {
+            System.out.println("Matches already exist for this item.");
+            return false;
+        }
+
         String sql = "{CALL GenerateMatches(?)}";
         try (Connection con = DBConnection.getConnection(); CallableStatement stmt = con.prepareCall(sql)){
             stmt.setLong(1, found_id);
             stmt.execute();
-            System.out.println("Query Executed");
+            System.out.println("New matches generated successfully");
+            return true;
         } catch (SQLException e) {
-            System.out.println("Error with matches: "+e);
+            System.out.println("Error generating matches: " + e);
+            return false;
         }
     }
 
 
-    public ResultSet getMatchesForFinder(long userId) {
-        String sql = "SELECT m.match_id, i.item_name, m.conf_score, u.fname as owner_name, l.loc_lost " +
+    public DefaultTableModel getMatchesForFinder(long userId) {
+        String [] columns = {"Match ID", "Item Name", "Confidence Score", "Probable Owner's Name", "Lost Location"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0); 
+
+
+        String sql = "SELECT m.match_id, i.item_name, m.conf_score, u.fname, l.loc_lost " +
                     "FROM matches m " +
                     "JOIN lost_item l ON m.lost_id = l.lost_id " +
                     "JOIN found_item f ON m.found_id = f.found_id " +
@@ -226,15 +257,95 @@ public class DataBaseHandler implements ItemOperations{
                     "JOIN users u ON l.user_id = u.user_id " +
                     "WHERE f.user_id = ? AND i.statuss = 'matched'";
         
-        try {
-            Connection con = DBConnection.getConnection();
-            PreparedStatement pstmt = con.prepareStatement(sql);
+        try(Connection con = DBConnection.getConnection();
+            PreparedStatement pstmt = con.prepareStatement(sql)){
             pstmt.setLong(1, userId);
-            return pstmt.executeQuery();
+
+            try(ResultSet rs = pstmt.executeQuery()){
+                while(rs.next()){
+                    Object [] row = {
+                        rs.getLong("match_id"),
+                        rs.getString("item_name"),
+                        rs.getInt("conf_score"),
+                        rs.getString("fname"),
+                        rs.getString("loc_lost")
+                    };
+                    model.addRow(row);
+                }
+            }
+            
         } catch (SQLException e) {
             System.out.println("Database Error while fetching finder matches: " + e.getMessage());
-            return null;
         }
+
+        return model;
+    }
+
+    public DefaultTableModel getMatchesForFoundItem(long foundId) {
+        String [] columns = {"Match ID", "Item Name", "Confidence Score", "Probable Owner's Name", "Lost Location"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0); 
+
+        String sql = "SELECT m.match_id, i.item_name, m.conf_score, u.fname, l.loc_lost " +
+                    "FROM matches m " +
+                    "JOIN lost_item l ON m.lost_id = l.lost_id " +
+                    "JOIN found_item f ON m.found_id = f.found_id " +
+                    "JOIN item i ON l.item_id = i.item_id " +
+                    "JOIN users u ON l.user_id = u.user_id " +
+                    "WHERE f.found_id = ?";
+        
+        try(Connection con = DBConnection.getConnection();
+            PreparedStatement pstmt = con.prepareStatement(sql)){
+            pstmt.setLong(1, foundId);
+
+            try(ResultSet rs = pstmt.executeQuery()){
+                while(rs.next()){
+                    Object [] row = {
+                        rs.getLong("match_id"),
+                        rs.getString("item_name"),
+                        rs.getInt("conf_score"),
+                        rs.getString("fname"),
+                        rs.getString("loc_lost")
+                    };
+                    model.addRow(row);
+                }
+            }
+            
+        } catch (SQLException e) {
+            System.out.println("Database Error while fetching matches for found item: " + e.getMessage());
+        }
+
+        return model;
+    }
+
+    @Override
+    public DefaultTableModel getReportedItems(long userId){
+        String [] columns = {"Found ID", "Item ID", "Item Name", "Object Name", "Reported Date"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0); 
+
+        String sql = "SELECT f.found_id, i.item_id, i.item_name, o.object_type, f.date_found "+
+                    "FROM found_item f JOIN item i ON f.item_id = i.item_id "+
+                    "JOIN object o ON i.object_id = o.object_id "+
+                    "WHERE f.user_id = ? and i.statuss = 'active' ";
+        try(Connection con = DBConnection.getConnection(); PreparedStatement stmt = con.prepareStatement(sql)) {
+            stmt.setLong(1, userId);
+            try (ResultSet rs = stmt.executeQuery()){
+                while (rs.next()){
+                    Object [] row = {
+                        rs.getLong("found_id"),
+                        rs.getLong("item_id"),
+                        rs.getString("item_name"),
+                        rs.getString("object_type"),
+                        rs.getDate("date_found")
+                    };
+
+                    model.addRow(row);
+                }
+            }
+        }
+        catch (SQLException e){
+            System.out.println("Database Error while fetching Reported Items: "+e.getMessage());
+        }
+            return model;
     }
 
     @Override
@@ -252,7 +363,10 @@ public class DataBaseHandler implements ItemOperations{
     }
 
     @Override
-    public ResultSet getGlobalFeed() {
+    public DefaultTableModel getGlobalFeed() {
+        String [] columns = {"Item Name", "Category", "Colour", "Date Lost", "Location Lost", "Description"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0);
+
         String sql = "SELECT i.item_name, c.category, col.colour, l.date_lost, l.loc_lost, i.descriptions " +
                     "FROM item i " +
                     "JOIN lost_item l ON i.item_id = l.item_id " +
@@ -261,13 +375,39 @@ public class DataBaseHandler implements ItemOperations{
                     "WHERE i.statuss = 'active' " +
                     "ORDER BY l.date_lost DESC";
         
-        try {
-            Connection con = DBConnection.getConnection();
-            Statement stmt = con.createStatement();
-            return stmt.executeQuery(sql);
+        try (Connection con = DBConnection.getConnection(); Statement stmt = con.createStatement()){
+            try(ResultSet rs = stmt.executeQuery(sql)){
+                while(rs.next()){
+                    Object [] row = {
+                        rs.getString("item_name"),
+                        rs.getString("category"),
+                        rs.getString("colour"),
+                        rs.getDate("date_lost"),
+                        rs.getString("loc_lost"),
+                        rs.getString("descriptions")
+                    };
+
+                    model.addRow(row);
+                }
+            }
         } catch (SQLException e) {
             System.out.println("Database Error while loading global feed: " + e.getMessage());
-            return null;
+        }
+
+        return model;
+    }
+
+    @Override
+    public boolean deleteItem(Long id){
+        String sql = "UPDATE item SET statuss = 'cancelled' WHERE item_id = ?";
+        try (Connection con = DBConnection.getConnection(); PreparedStatement stmt = con.prepareStatement(sql)) {
+            stmt.setLong(1, id);
+            int rowAffected = stmt.executeUpdate();
+            return rowAffected > 0;
+            
+        } catch (SQLException e) {
+            System.out.println("Deletion operation failed\n"+e.getMessage());
+            return false;
         }
     }
 
