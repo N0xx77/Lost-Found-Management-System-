@@ -42,6 +42,7 @@ public class MainDashboard extends JFrame {
         tabs.addTab("Report Lost Item", createLostReportPanel());
         tabs.addTab("Report Found Item", createFoundReportPanel());
         tabs.addTab("Manage my Reports", createManageMyReportsPanel());
+        tabs.addTab("Notifications", createNotificationPanel());
         tabs.addTab("Global Feed", createGlobalFeedPanel());
 
         add(tabs, BorderLayout.CENTER);
@@ -116,6 +117,14 @@ public class MainDashboard extends JFrame {
 
             dbHandler.insertLostItem(newItem);
             JOptionPane.showMessageDialog(this, "Lost Item Reported Successfully!");
+
+            nameF.setText("");
+            locF.setText("");
+            descF.setText("");
+            brandF.setText("");
+            locF.setText("");
+            matF.setText("");
+            shapeF.setText("");
         });
 
         return panel;
@@ -194,9 +203,13 @@ public class MainDashboard extends JFrame {
             JOptionPane.showMessageDialog(this, "Success! Found item recorded.");
             
             // Optional: Clear fields after success
-            nameF.setText("");
+           nameF.setText("");
             locF.setText("");
             descF.setText("");
+            brandF.setText("");
+            locF.setText("");
+            matF.setText("");
+            shapeF.setText("");
         });
 
         return panel;
@@ -319,5 +332,9 @@ public class MainDashboard extends JFrame {
         
         globalFeedTable.revalidate();
         globalFeedTable.repaint();
+    }
+
+    private JPanel createNotificationPanel(){
+        return new notificationPage(currentUser, dbHandler);
     }
 }
