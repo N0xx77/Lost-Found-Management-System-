@@ -1,12 +1,14 @@
 package service;
 
-import java.sql.ResultSet;
-import model.Found_item;
-import model.Lost_item;
+import javax.swing.table.DefaultTableModel;
+import model.*;
 
 public interface ItemOperations {
     void insertLostItem(Lost_item item);
     void insertFoundItem(Found_item item);
-    ResultSet getGlobalFeed();
+    DefaultTableModel getGlobalFeed();
+    DefaultTableModel getReportedItems(long userId);
+    boolean deleteItem(Long item_id);
     void confirmMatch(long matchId);
+
 }

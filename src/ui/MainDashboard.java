@@ -2,17 +2,21 @@ package ui;
 
 import database_access_only.DataBaseHandler;
 import java.awt.*;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import model.Found_item;
-import model.Lost_item;
-import model.Users;
+import model.*;
+
 
 public class MainDashboard extends JFrame {
     private final Users currentUser;
     private final DataBaseHandler dbHandler;
+
+    private DefaultTableModel itemModel;
+    private JTable itemTable; 
+    private DefaultTableModel globalFeedModel;
+    private JTable globalFeedTable;
+
+    private ItemMatchesFrame itemMatchFrame;
 
     public MainDashboard(Users user) {
         this.currentUser = user;
@@ -37,10 +41,21 @@ public class MainDashboard extends JFrame {
         // Add the different sections (We will build these next)
         tabs.addTab("Report Lost Item", createLostReportPanel());
         tabs.addTab("Report Found Item", createFoundReportPanel());
-        tabs.addTab("Matches & Notifications", createNotificationPanel());
-        tabs.addTab("Global Feed", createGlobalFeedPanel()); 
+        tabs.addTab("Manage my Reports", createManageMyReportsPanel());
+        tabs.addTab("Global Feed", createGlobalFeedPanel());
 
         add(tabs, BorderLayout.CENTER);
+
+        tabs.addChangeListener(e -> {
+            int index = tabs.getSelectedIndex();
+            if (index == 2) { 
+                refreshItemsTable();
+            }
+            if (index == 3) { 
+                refreshGlobalFeed();
+            }
+        });
+
         setVisible(true);
     }
 
@@ -196,100 +211,113 @@ public class MainDashboard extends JFrame {
         p.add(c, gbc);
     }
 
-    private JPanel createNotificationPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        
-        // 1. Table Setup
-        String[] columnNames = {"Match ID", "Item Name", "Confidence", "Potential Owner", "Lost Location"};
-        DefaultTableModel model = new DefaultTableModel(columnNames, 0);
-        JTable table = new JTable(model);
-        
-        // 2. Load Data from DB
-        refreshTable(model);
-
-        // 3. Confirm Button
-        JButton confirmBtn = new JButton("Confirm & Return Item");
-        confirmBtn.addActionListener(e -> {
-            int selectedRow = table.getSelectedRow();
-            if (selectedRow != -1) {
-                long matchId = (long) table.getValueAt(selectedRow, 0);
-                dbHandler.confirmMatch(matchId);
-                JOptionPane.showMessageDialog(this, "Confirmation sent! The item status is now 'Returned'.");
-                refreshTable(model); 
-            } else {
-                JOptionPane.showMessageDialog(this, "Please select a match from the table first.");
-            }
-        });
-
-        panel.add(new JScrollPane(table), BorderLayout.CENTER);
-        panel.add(confirmBtn, BorderLayout.SOUTH);
-        
-        return panel;
-    }
-
-    private void refreshTable(DefaultTableModel model) {
-        model.setRowCount(0); // Clear existing data
-        try {
-            ResultSet rs = dbHandler.getMatchesForFinder(currentUser.getID());
-            while (rs != null && rs.next()) {
-                Object[] row = {
-                    rs.getLong("match_id"),
-                    rs.getString("item_name"),
-                    rs.getInt("conf_score") + "/10",
-                    rs.getString("owner_name"),
-                    rs.getString("loc_lost")
-                };
-                model.addRow(row);
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-    }
-
     private JPanel createGlobalFeedPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         
         // 1. Table Setup
-        String[] columns = {"Item Name", "Category", "Color", "Date Lost", "Location", "Description"};
-        DefaultTableModel model = new DefaultTableModel(columns, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false; // Make the feed read-only
-            }
-        };
-        JTable table = new JTable(model);
-        
-        // 2. Load Function
-        Runnable loadData = () -> {
-            model.setRowCount(0);
-            try (ResultSet rs = dbHandler.getGlobalFeed()) {
-                while (rs != null && rs.next()) {
-                    model.addRow(new Object[]{
-                        rs.getString("item_name"),
-                        rs.getString("category"),
-                        rs.getString("colour"),
-                        rs.getDate("date_lost"),
-                        rs.getString("loc_lost"),
-                        rs.getString("descriptions")
-                    });
-                }
-            } catch (SQLException e) { System.out.println(e.getMessage()); }
-        };
+        globalFeedModel = dbHandler.getGlobalFeed();
+        globalFeedTable = new JTable(globalFeedModel);
 
-        // 3. Toolbar with Refresh
         JButton refreshBtn = new JButton("Refresh Feed");
-        refreshBtn.addActionListener(e -> loadData.run());
+        refreshBtn.addActionListener(e -> refreshGlobalFeed());
         
         JPanel toolBar = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         toolBar.add(refreshBtn);
 
-        // Initial load
-        loadData.run();
-
         panel.add(new JLabel(" Recent Lost Items @ SIT Pune", SwingConstants.LEFT), BorderLayout.NORTH);
-        panel.add(new JScrollPane(table), BorderLayout.CENTER);
+        panel.add(new JScrollPane(globalFeedTable), BorderLayout.CENTER);
         panel.add(toolBar, BorderLayout.SOUTH);
         
         return panel;
+    }
+
+    private JPanel createManageMyReportsPanel(){
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        itemModel = dbHandler.getReportedItems(currentUser.getID());
+        itemTable = new JTable(itemModel);
+
+        itemTable.removeColumn(itemTable.getColumnModel().getColumn(0));
+        itemTable.removeColumn(itemTable.getColumnModel().getColumn(1));
+
+        JScrollPane scrollPane = new JScrollPane(itemTable);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton match = new JButton("Generate Matches");
+        JButton delete = new JButton("Cancel Report");
+
+        btnPanel.add(match);
+        btnPanel.add(delete);
+        panel.add(btnPanel, BorderLayout.SOUTH);
+
+        match.addActionListener(e -> {
+            int row = itemTable.getSelectedRow();
+
+            if(row != -1){
+                long foundid = (long) itemModel.getValueAt(row, 0);
+                boolean newMatchesGenerated = dbHandler.generateMatches(foundid);
+                
+                String message = newMatchesGenerated ? "New matches generated successfully!" : "Matches already exist for this item.";
+                JOptionPane.showMessageDialog(this, message);
+
+                if(itemMatchFrame == null || !itemMatchFrame.isVisible()){
+                    itemMatchFrame = new ItemMatchesFrame(currentUser, foundid);
+                }
+                else{
+                    itemMatchFrame.toFront();
+                    itemMatchFrame.requestFocus();
+                }
+                
+            }
+            else{
+                JOptionPane.showMessageDialog(this, "Please select a row!");
+            }
+        });
+
+        delete.addActionListener(e-> {
+            int row = itemTable.getSelectedRow();
+            boolean deleted = false;
+
+            if(row != -1){
+                long itemid = (long) itemModel.getValueAt(row, 1);
+                deleted = dbHandler.deleteItem(itemid);
+            }
+            else{
+                JOptionPane.showMessageDialog(this, "Please select a row!");
+            }
+            
+            if(deleted){
+                JOptionPane.showMessageDialog(this, "Cancelled the Item Successfully!");
+                refreshItemsTable();
+
+            }
+            else{
+                JOptionPane.showMessageDialog(this, "No cancellation of items!");
+
+            }            
+        });
+
+        return panel;
+    }
+
+    //helper function to refresh after every updation in table
+    private void refreshItemsTable() {
+        itemModel = dbHandler.getReportedItems(currentUser.getID());
+        itemTable.setModel(itemModel);
+
+        if (itemTable.getColumnCount() >= 2) {
+            itemTable.removeColumn(itemTable.getColumnModel().getColumn(0)); // Removes Found ID
+            itemTable.removeColumn(itemTable.getColumnModel().getColumn(0)); // Removes Item ID
+        }
+    }
+
+    private void refreshGlobalFeed(){
+        globalFeedModel = dbHandler.getGlobalFeed();
+        globalFeedTable.setModel(globalFeedModel);
+        
+        globalFeedTable.revalidate();
+        globalFeedTable.repaint();
     }
 }

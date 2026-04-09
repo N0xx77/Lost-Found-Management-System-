@@ -14,24 +14,38 @@ public class LoginFrame extends JFrame {
     public LoginFrame() {
         dbHandler = new DataBaseHandler();
         setTitle("SIT Pune - Lost & Found Login");
-        setSize(700, 400);
+        setSize(450, 300); // More standard login dimensions
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new GridLayout(3, 2, 10, 10)); 
-        ((JComponent) getContentPane()).setBorder(
-            BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        );
+        setLocationRelativeTo(null); 
 
-        // UI Elements
-        add(new JLabel("Email (firstname.lastname.btech[year]@sitpune.edu.in):"));
+        // Using a vertical box layout to keep variables exactly as they are
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
+
+        // Email section
+        mainPanel.add(new JLabel("Email (firstname.lastname.btech[year]@sitpune.edu.in):"));
         emailField = new JTextField();
-        add(emailField);
+        emailField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        mainPanel.add(emailField);
+        mainPanel.add(Box.createVerticalStrut(10)); // Spacing
 
-        add(new JLabel("Password:"));
+        // Password section
+        mainPanel.add(new JLabel("Password:"));
         passField = new JPasswordField();
-        add(passField);
+        passField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        mainPanel.add(passField);
+        mainPanel.add(Box.createVerticalStrut(20)); // Spacing
 
+        // Login Button
         loginBtn = new JButton("Login");
-        add(loginBtn);
+        loginBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        mainPanel.add(loginBtn);
+
+        add(mainPanel);
+
+        // ACTION: Allow "Enter" key to trigger login
+        this.getRootPane().setDefaultButton(loginBtn);
 
         loginBtn.addActionListener(e -> {
             attemptLogin();
