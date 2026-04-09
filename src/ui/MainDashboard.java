@@ -41,14 +41,8 @@ public class MainDashboard extends JFrame {
         // Add the different sections (We will build these next)
         tabs.addTab("Report Lost Item", createLostReportPanel());
         tabs.addTab("Report Found Item", createFoundReportPanel());
-<<<<<<< HEAD
-        // tabs.addTab("Matches & Notifications", createNotificationPanel());
-        tabs.addTab("Notifications", createNotificationPanel());
-        tabs.addTab("Global Feed", createGlobalFeedPanel()); 
-=======
         tabs.addTab("Manage my Reports", createManageMyReportsPanel());
         tabs.addTab("Global Feed", createGlobalFeedPanel());
->>>>>>> ad7faea677ca92ecfc5d17c84c8115cfa7d1813d
 
         add(tabs, BorderLayout.CENTER);
 
@@ -217,61 +211,6 @@ public class MainDashboard extends JFrame {
         p.add(c, gbc);
     }
 
-<<<<<<< HEAD
-    private JPanel createNotificationPanel() {
-        // JPanel panel = new JPanel(new BorderLayout());
-        
-        // // 1. Table Setup
-        // String[] columnNames = {"Match ID", "Item Name", "Confidence", "Potential Owner", "Lost Location"};
-        // DefaultTableModel model = new DefaultTableModel(columnNames, 0);
-        // JTable table = new JTable(model);
-        
-        // // 2. Load Data from DB
-        // refreshTable(model);
-
-        // // 3. Confirm Button
-        // JButton confirmBtn = new JButton("Confirm & Return Item");
-        // confirmBtn.addActionListener(e -> {
-        //     int selectedRow = table.getSelectedRow();
-        //     if (selectedRow != -1) {
-        //         long matchId = (long) table.getValueAt(selectedRow, 0);
-        //         dbHandler.confirmMatch(matchId);
-        //         JOptionPane.showMessageDialog(this, "Confirmation sent! The item status is now 'Returned'.");
-        //         refreshTable(model); 
-        //     } else {
-        //         JOptionPane.showMessageDialog(this, "Please select a match from the table first.");
-        //     }
-        // });
-
-        // panel.add(new JScrollPane(table), BorderLayout.CENTER);
-        // panel.add(confirmBtn, BorderLayout.SOUTH);
-        
-        // return panel;
-
-        return new notificationPage(currentUser, dbHandler);
-    }
-
-    private void refreshTable(DefaultTableModel model) {
-        model.setRowCount(0); // Clear existing data
-        try {
-            ResultSet rs = dbHandler.getMatchesForFinder(currentUser.getID());
-            while (rs != null && rs.next()) {
-                Object[] row = {
-                    rs.getLong("match_id"),
-                    rs.getString("item_name"),
-                    rs.getInt("conf_score") + "/10",
-                    rs.getString("owner_name"),
-                    rs.getString("loc_lost")
-                };
-                model.addRow(row);
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-    }
-
-=======
->>>>>>> ad7faea677ca92ecfc5d17c84c8115cfa7d1813d
     private JPanel createGlobalFeedPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         
