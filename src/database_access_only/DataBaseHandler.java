@@ -242,12 +242,18 @@ public class DataBaseHandler implements ItemOperations{
             return false;
         }
     }
-
+    private DefaultTableModel createReadOnlyTableModel(String[] columns) {
+        return new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+    }
 
     public DefaultTableModel getMatchesForFinder(long userId) {
         String [] columns = {"Match ID", "Item Name", "Confidence Score", "Probable Owner's Name", "Lost Location"};
-        DefaultTableModel model = new DefaultTableModel(columns, 0); 
-
+        DefaultTableModel model = createReadOnlyTableModel(columns); 
 
         String sql = "SELECT m.match_id, i.item_name, m.conf_score, u.fname, l.loc_lost " +
                     "FROM matches m " +
@@ -283,7 +289,7 @@ public class DataBaseHandler implements ItemOperations{
 
     public DefaultTableModel getMatchesForFoundItem(long foundId) {
         String [] columns = {"Match ID", "Item Name", "Confidence Score", "Probable Owner's Name", "Lost Location"};
-        DefaultTableModel model = new DefaultTableModel(columns, 0); 
+        DefaultTableModel model = createReadOnlyTableModel(columns); 
 
         String sql = "SELECT m.match_id, i.item_name, m.conf_score, u.fname, l.loc_lost " +
                     "FROM matches m " +
@@ -320,7 +326,7 @@ public class DataBaseHandler implements ItemOperations{
     @Override
     public DefaultTableModel getReportedItems(long userId){
         String [] columns = {"Found ID", "Item ID", "Item Name", "Object Name", "Reported Date"};
-        DefaultTableModel model = new DefaultTableModel(columns, 0); 
+        DefaultTableModel model = createReadOnlyTableModel(columns); 
 
         String sql = "SELECT f.found_id, i.item_id, i.item_name, o.object_type, f.date_found "+
                     "FROM found_item f JOIN item i ON f.item_id = i.item_id "+
@@ -365,7 +371,7 @@ public class DataBaseHandler implements ItemOperations{
     @Override
     public DefaultTableModel getGlobalFeed() {
         String [] columns = {"Item Name", "Category", "Colour", "Date Lost", "Location Lost", "Description"};
-        DefaultTableModel model = new DefaultTableModel(columns, 0);
+        DefaultTableModel model = createReadOnlyTableModel(columns);
 
         String sql = "SELECT i.item_name, c.category, col.colour, l.date_lost, l.loc_lost, i.descriptions " +
                     "FROM item i " +

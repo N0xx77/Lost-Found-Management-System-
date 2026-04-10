@@ -6,13 +6,12 @@ import javax.swing.table.DefaultTableModel;
 import model.Users;
 import model.notifications;
 import java.awt.*;
-import java.util.List;
 
 public class notificationPage extends JPanel {
     private final DataBaseHandler dbHandler;
     private final Users currentUser;
-    private DefaultTableModel lostModel;
-    private DefaultTableModel foundModel;
+    private final DefaultTableModel lostModel;
+    private final DefaultTableModel foundModel;
 
     public notificationPage(Users user, DataBaseHandler db) {
         this.currentUser = user;
@@ -21,8 +20,8 @@ public class notificationPage extends JPanel {
         setLayout(new BorderLayout());
         JTabbedPane subTabs = new JTabbedPane();
 
-        lostModel = new DefaultTableModel(new String[]{"Message", "Date"}, 0);
-        foundModel = new DefaultTableModel(new String[]{"Message", "Date"}, 0);
+        lostModel = createReadOnlyTableModel(new String[]{"Message", "Date"});
+        foundModel = createReadOnlyTableModel(new String[]{"Message", "Date"});
 
         subTabs.addTab("Lost Item Updates", new JScrollPane(new JTable(lostModel)));
         subTabs.addTab("Found Item Pings", new JScrollPane(new JTable(foundModel)));
@@ -34,6 +33,15 @@ public class notificationPage extends JPanel {
         add(refreshBtn, BorderLayout.SOUTH);
 
         loadData();
+    }
+
+    private DefaultTableModel createReadOnlyTableModel(String[] columns) {
+        return new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
     }
 
     private void loadData() {

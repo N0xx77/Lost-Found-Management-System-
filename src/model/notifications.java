@@ -3,7 +3,7 @@ package model;
 import java.sql.Date;
 
 public class notifications {
-    private final long notifId;
+    protected final long notifId;
     private final long matchId;
     private final String message;
     private final Date sentDate;
