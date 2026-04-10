@@ -9,14 +9,38 @@ public class DataBaseHandler implements ItemOperations{
     private final HashMap<Integer, String> objectMap = new HashMap<>();
     private final HashMap<Integer, String> colourMap = new HashMap<>();
     private final HashMap<Integer, String> categoryMap = new HashMap<>();
+     
 
     public DataBaseHandler() {
         loadMapData();
     }
 
-    public int getCategoryId(String name) { return categoryMap.entrySet().stream().filter(e -> e.getValue().equals(name)).map(e -> e.getKey()).findFirst().orElse(1); }
-    public int getColorId(String name) { return colourMap.entrySet().stream().filter(e -> e.getValue().equals(name)).map(e -> e.getKey()).findFirst().orElse(1); }
-    public int getObjectId(String name) { return objectMap.entrySet().stream().filter(e -> e.getValue().equals(name)).map(e -> e.getKey()).findFirst().orElse(1); }
+    public int getCategoryId(String name) {
+        for (java.util.Map.Entry<Integer, String> entry : categoryMap.entrySet()) {
+            if (entry.getValue().equals(name)) {
+                return entry.getKey();
+            }
+        }
+        return 1; 
+    }
+
+    public int getColorId(String name) {
+        for (java.util.Map.Entry<Integer, String> entry : colourMap.entrySet()) {
+            if (entry.getValue().equals(name)) {
+                return entry.getKey();
+            }
+        }
+        return 1;
+    }
+
+    public int getObjectId(String name) {
+        for (java.util.Map.Entry<Integer, String> entry : objectMap.entrySet()) {
+            if (entry.getValue().equals(name)) {
+                return entry.getKey();
+            }
+        }
+        return 1;
+    }
 
     public String[] getCategoryNames() {
         return categoryMap.values().toArray(String[]::new);
@@ -331,6 +355,7 @@ public class DataBaseHandler implements ItemOperations{
             CallableStatement stmt = con.prepareCall(sql)) {
             stmt.setLong(1, matchId);
             stmt.execute();
+            addNotification(matchId, "Success! Your item has been confirmed for return.");
             System.out.println("Match confirmed and items marked as returned!");
         } catch (SQLException e) {
             System.out.println("Database Error while confirming match: " + e.getMessage());
@@ -409,5 +434,56 @@ public class DataBaseHandler implements ItemOperations{
             }
         }
 
+    }
+
+    public java.util.List<notifications> getNotificationsForUser(long userId, String type) {
+        java.util.List<notifications> list = new java.util.ArrayList<>();
+        
+        String sql;
+        if ("LOST".equalsIgnoreCase(type)) {
+            sql = "SELECT n.* FROM notification n " +
+                "JOIN matches m ON n.match_id = m.match_id " +
+                "JOIN lost_item l ON m.lost_id = l.lost_id " +
+                "WHERE l.user_id = ? " +
+                "ORDER BY n.sent_date DESC";
+        } else {
+            sql = "SELECT n.* FROM notification n " +
+                "JOIN matches m ON n.match_id = m.match_id " +
+                "JOIN found_item f ON m.found_id = f.found_id " +
+                "WHERE f.user_id = ? " +
+                "ORDER BY n.sent_date DESC";
+        }
+
+        try (Connection con = DBConnection.getConnection(); 
+            PreparedStatement pstmt = con.prepareStatement(sql)) {
+            
+            pstmt.setLong(1, userId);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                list.add(new notifications(
+                    rs.getLong("notif_id"),
+                    rs.getLong("match_id"),
+                    rs.getString("message"),
+                    rs.getDate("sent_date")
+                ));
+            }
+        } catch (SQLException e) {
+            System.out.println("Error fetching notifications: " + e.getMessage());
+        }
+        return list;
+    }
+
+    public void addNotification(long matchId, String message) {
+        String sql = "INSERT INTO notification (match_id, message, sent_date) VALUES (?, ?, ?)";
+        try (Connection con = DBConnection.getConnection(); 
+            PreparedStatement pstmt = con.prepareStatement(sql)) {
+            pstmt.setLong(1, matchId);
+            pstmt.setString(2, message);
+            pstmt.setDate(3, new java.sql.Date(System.currentTimeMillis()));
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("Error inserting notification: " + e.getMessage());
+        }
     }
 }
