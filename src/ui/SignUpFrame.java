@@ -31,7 +31,7 @@ public class SignUpFrame extends JFrame{
         addLabelAndField("First Name:", fnField, 0, gbc);
         addLabelAndField("Last Name:", lnField, 1, gbc);
         addLabelAndField("Phone Number:", phoneField, 2, gbc);
-        addLabelAndField("Email:", emailField, 3, gbc);
+        addLabelAndField("Email (SIT EMAIL):", emailField, 3, gbc);
         addLabelAndField("Password:", passField, 4, gbc);
         
         
