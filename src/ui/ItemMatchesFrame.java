@@ -69,6 +69,7 @@ public class ItemMatchesFrame extends JFrame{
                 dbHandler.confirmMatch(matchId);
                 JOptionPane.showMessageDialog(this, "Confirmation sent! The item status is now 'Returned'.");
                 refreshMatchesTable();
+                this.dispose();
             } else {
                 JOptionPane.showMessageDialog(this, "Please select a match from the table first.");
             }
